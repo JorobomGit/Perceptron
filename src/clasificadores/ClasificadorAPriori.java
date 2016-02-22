@@ -16,7 +16,7 @@ public class ClasificadorAPriori extends Clasificador {
     @Override
     public void entrenamiento(Datos datostrain) {
     // Busco la clase mayoritaria de los datos y la guardo
-       /*La clase se encuentra en el ultimo elemento de cadas fila*/
+       /*La clase se encuentra en el ultimo elemento de cada fila*/
         Map<String, Integer> clases = new HashMap<>();
         String datos[][] = datostrain.getDatos();
         for(int i=0;i<datostrain.getNumDatos();i++){

@@ -11,17 +11,17 @@ import java.util.logging.Logger;
 
 public class ClasificadorAdaline extends Clasificador {
 	
-    ArrayList<String> clasesDisponibles = new ArrayList<>();
+    private ArrayList<String> clasesDisponibles = new ArrayList<>();
 
-    int epocas;
+    private int epocas;
 
-    Double b;
-    Double[] w; //Vector de pesos w
-    Double tasa_aprendizaje;
+    private double b;
+    private Double[] w; //Vector de pesos w
+    private Double tasa_aprendizaje;
 
     public ClasificadorAdaline(int tam_w) {
         //Inicializar todos los pesos y sesgos (por simplicidad a cero)
-        this.b = 0.0;
+        this.b = 1.0;
         this.w = new Double[tam_w];
         for (int i = 0; i < tam_w; i++) {
             this.w[i] = 0.0;
@@ -54,13 +54,16 @@ public class ClasificadorAdaline extends Clasificador {
         int y;
 
         double umbral = 0;
+        double errorCuadratico = 0;
         //Paso 1: Mientras la condicion de parada sea falsa ejecutar los pasos 2-6:
         while (epocas_aux < this.epocas) {
+        	errorCuadratico=0;
             Double b_aux = b;
             Double[] w_aux = w.clone();
             //Paso 2: Para cada par de entrenamiento (s:t), ejecutar los pasos 3-5:
             for (int i = 0; i < datostrain.getDatos().length; i++) {
                 sumatorio = 0;
+                double error=0;
                 //Paso 3: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
                 for (int j = 0; j < datostrain.getNumAtributos(); j++) {
                     xi[j] = Double.parseDouble(datostrain.getDatos()[i][j]);
@@ -68,7 +71,7 @@ public class ClasificadorAdaline extends Clasificador {
                 //Paso 4: Calcular la respuesta de la neurona de salida:
                 //y _ in = b + sumatorio(x, w)
                 for (int j = 0; j < w.length; j++) {
-                    sumatorio += xi[j] + w[j];
+                    sumatorio += xi[j] * w[j];
                 }
 
                 y_in = b + sumatorio;
@@ -85,11 +88,14 @@ public class ClasificadorAdaline extends Clasificador {
                 t = datostrain.getClases().get(aux_clases);
 
                 for (int j = 0; j < w.length; j++) {
-                    w[j] = w[j] + (this.tasa_aprendizaje * (t-y_in) * xi[j]);
+                	error = (t-y_in);
+                    w[j] = w[j] + (this.tasa_aprendizaje * (error) * xi[j]);
+                    error = Math.pow(error, 2);
                 }
                 b = b + (this.tasa_aprendizaje * (t-y_in));
-
+                errorCuadratico += error;
             }
+            System.out.println(epocas_aux + "\t" + errorCuadratico/datostrain.getNumDatos());
             epocas_aux++;
             //if no cambia, break
             if(this.comparador(w, w_aux) && Objects.equals(b, b_aux))
@@ -124,7 +130,7 @@ public class ClasificadorAdaline extends Clasificador {
             y_in = b + sumatorio;
 
             //Calculamos respuesta de salida
-            if (y_in >= 0) {
+            if (y_in >= umbral) {
                 y = 1;
             } else{
                 y = -1;
