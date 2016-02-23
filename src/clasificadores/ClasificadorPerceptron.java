@@ -21,11 +21,7 @@ public class ClasificadorPerceptron extends Clasificador {
 
     public ClasificadorPerceptron(int tam_w) {
         //Inicializar todos los pesos y sesgos (por simplicidad a cero)
-<<<<<<< HEAD
-        this.b = 1;
-=======
         this.b = 0.0;
->>>>>>> feature/Perceptron
         this.w = new double[tam_w];
         for (int i = 0; i < tam_w; i++) {
             this.w[i] = 0.0;
@@ -57,10 +53,7 @@ public class ClasificadorPerceptron extends Clasificador {
 
         double umbral = 0;
         while (epocas_aux < this.epocas) {
-<<<<<<< HEAD
-=======
             System.out.println("x1 x2 b      y_in y t        Dw1 Dw2 Db      w1 w2 b");
->>>>>>> feature/Perceptron
             double b_aux = b;
             double[] w_aux = w.clone();
             //Paso 2: Para cada par de entrenamiento (s:t), ejecutar los pasos 3-5:
@@ -146,7 +139,7 @@ public class ClasificadorPerceptron extends Clasificador {
             y_in = b + sumatorio;
 
             //Calculamos respuesta de salida
-            if (y_in >= umbral) {
+			if(y_in>= umbral)
                 y = 1;
             } else {
                 y = -1;
