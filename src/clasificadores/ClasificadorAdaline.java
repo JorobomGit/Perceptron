@@ -1,38 +1,34 @@
 package clasificadores;
-
 import datos.Datos;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ClasificadorPerceptron extends Clasificador {
+public class ClasificadorAdaline extends Clasificador {
+	
+    private ArrayList<String> clasesDisponibles = new ArrayList<>();
 
-    ArrayList<String> clasesDisponibles = new ArrayList<>();
+    private int epocas;
 
-    int epocas;
+    private double b;
+    private Double[] w; //Vector de pesos w
+    private Double tasa_aprendizaje;
 
-    double b;
-    double[] w; //Vector de pesos w
-    double tasa_aprendizaje;
-
-    public ClasificadorPerceptron(int tam_w) {
+    public ClasificadorAdaline(int tam_w) {
         //Inicializar todos los pesos y sesgos (por simplicidad a cero)
-<<<<<<< HEAD
-        this.b = 1;
-=======
-        this.b = 0.0;
->>>>>>> feature/Perceptron
-        this.w = new double[tam_w];
+        this.b = 1.0;
+        this.w = new Double[tam_w];
         for (int i = 0; i < tam_w; i++) {
             this.w[i] = 0.0;
         }
 
         //Establecer la tasa de aprendizaje a (0 < a ≤1)
-        this.tasa_aprendizaje = 1;
+        this.tasa_aprendizaje = 0.1;
     }
 
     @Override
@@ -45,6 +41,8 @@ public class ClasificadorPerceptron extends Clasificador {
         try {
             System.out.println("Introduzca epocas para Perceptron:");
             this.epocas = Integer.parseInt((bufferRead.readLine()));
+            System.out.println("Introduce la tasa de aprendizaje:");
+            this.tasa_aprendizaje = Double.parseDouble(bufferRead.readLine());
         } catch (IOException ex) {
             Logger.getLogger(ClasificadorPerceptron.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -56,20 +54,19 @@ public class ClasificadorPerceptron extends Clasificador {
         int y;
 
         double umbral = 0;
+        double errorCuadratico = 0;
+        //Paso 1: Mientras la condicion de parada sea falsa ejecutar los pasos 2-6:
         while (epocas_aux < this.epocas) {
-<<<<<<< HEAD
-=======
-            System.out.println("x1 x2 b      y_in y t        Dw1 Dw2 Db      w1 w2 b");
->>>>>>> feature/Perceptron
-            double b_aux = b;
-            double[] w_aux = w.clone();
+        	errorCuadratico=0;
+            Double b_aux = b;
+            Double[] w_aux = w.clone();
             //Paso 2: Para cada par de entrenamiento (s:t), ejecutar los pasos 3-5:
             for (int i = 0; i < datostrain.getDatos().length; i++) {
                 sumatorio = 0;
-
+                double error=0;
                 //Paso 3: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
                 for (int j = 0; j < datostrain.getNumAtributos(); j++) {
-                    xi[j]= Double.parseDouble(datostrain.getDatos()[i][j]);
+                    xi[j] = Double.parseDouble(datostrain.getDatos()[i][j]);
                 }
                 //Paso 4: Calcular la respuesta de la neurona de salida:
                 //y _ in = b + sumatorio(x, w)
@@ -78,13 +75,6 @@ public class ClasificadorPerceptron extends Clasificador {
                 }
 
                 y_in = b + sumatorio;
-
-                //Para actualizar los pesos necesitamos la t, hay que configurar la t por clases
-                if (y_in >= umbral) {
-                    y = 1;
-                } else {
-                    y = -1;
-                }
 
                 double t;
 
@@ -97,22 +87,19 @@ public class ClasificadorPerceptron extends Clasificador {
                 //Paso 5: Ajustar los pesos y el sesgo si ha ocurrido un error para este patrón: 
                 t = datostrain.getClases().get(aux_clases);
 
-                if (y != t) {
-                    for (int j = 0; j < w.length; j++) {
-                        w[j] = w[j] + (this.tasa_aprendizaje * t * xi[j]);
-                    }
-                    b = b + (this.tasa_aprendizaje * t);
+                for (int j = 0; j < w.length; j++) {
+                	error = (t-y_in);
+                    w[j] = w[j] + (this.tasa_aprendizaje * (error) * xi[j]);
+                    error = Math.pow(error, 2);
                 }
-                System.out.println(xi[0] + " " + xi[1] + " 0\t" 
-                        + y_in +" "+ y +" "+ t +"\t"+ 
-                        (this.tasa_aprendizaje * t * xi[0]) + " "+(this.tasa_aprendizaje * t * xi[1]) +" "+ (this.tasa_aprendizaje * t)
-                +"\t"+ w[0]+" " + w[1] + " " + b);
+                b = b + (this.tasa_aprendizaje * (t-y_in));
+                errorCuadratico += error;
             }
+            System.out.println(epocas_aux + "\t" + errorCuadratico/datostrain.getNumDatos());
             epocas_aux++;
             //if no cambia, break
-            if (this.comparador(w, w_aux) && b == b_aux) {
+            if(this.comparador(w, w_aux) && Objects.equals(b, b_aux))
                 break;
-            }
         }
         System.out.println("Numero de epocas realizadas: " + epocas_aux);
 
@@ -129,18 +116,15 @@ public class ClasificadorPerceptron extends Clasificador {
 
         double umbral = 0;
         for (int i = 0; i < datos.getNumDatos(); i++) {
-            sumatorio = 0;
+            sumatorio=0;
             //Paso 2: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
             for (int j = 0; j < datos.getNumAtributos(); j++) {
-                xi[j]= Double.parseDouble(datos.getDatos()[i][j]);
-                //System.out.println("X: " + xi[j]);
+                xi[j] = Double.parseDouble(datos.getDatos()[i][j]);
             }
-            
-            
             //Paso 3: Calcular la respuesta de la neurona de salida:
             //y _ in = b + sumatorio(x, w)
             for (int j = 0; j < w.length; j++) {
-                sumatorio += xi[j] * w[j];
+                sumatorio += xi[j] + w[j];
             }
 
             y_in = b + sumatorio;
@@ -148,26 +132,24 @@ public class ClasificadorPerceptron extends Clasificador {
             //Calculamos respuesta de salida
             if (y_in >= umbral) {
                 y = 1;
-            } else {
+            } else{
                 y = -1;
             }
-
+            
             //Obtenemos todas las predicciones
             datosClasificados.add(Integer.toString(y));
+               
         }
 
         return datosClasificados;
     }
-
-    private boolean comparador(double[] x, double[] y) {
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] != y[i]) {
-                return false;
-            }
-        }
-
+    
+    private boolean comparador(Double[] x, Double[] y){
+        for(int i=0;i<x.length;i++)
+            if(x[i] != y[i]) return false;
+        
         return true;
-
+        
     }
 
 }
