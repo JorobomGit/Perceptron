@@ -1,41 +1,39 @@
 package clasificadores;
-import datos.Datos;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import datos.Datos;
+
 public class ClasificadorAdaline extends Clasificador {
-	
-    private ArrayList<String> clasesDisponibles = new ArrayList<>();
 
     private int epocas;
 
     private double b;
-    private Double[] w; //Vector de pesos w
-    private Double tasa_aprendizaje;
+    private double[] w; //Vector de pesos w
+    private double tasa_aprendizaje;
+    private double tolerancia;
 
     public ClasificadorAdaline(int tam_w) {
         //Inicializar todos los pesos y sesgos (por simplicidad a cero)
         this.b = 1.0;
-        this.w = new Double[tam_w];
+        this.w = new double[tam_w];
         for (int i = 0; i < tam_w; i++) {
             this.w[i] = 0.0;
         }
+        this.tolerancia = 0.01;
 
         //Establecer la tasa de aprendizaje a (0 < a ≤1)
-        this.tasa_aprendizaje = 0.1;
+        this.tasa_aprendizaje = 0.01;
     }
 
     @Override
     public void entrenamiento(Datos datostrain) {
         //Paso 1: Mientras que la condición de parada sea falsa, ejecutar pasos 2-6
         //Condicion de parada: o maximo numero de epocas o los pesos no cambian
-        int epocas_aux = 0;
 
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
         try {
@@ -49,60 +47,49 @@ public class ClasificadorAdaline extends Clasificador {
 
         //Variable xi equivalente a las activaciones si
         double[] xi = new double[datostrain.getNumAtributos()];
-
-        double y_in, sumatorio;
-        int y;
-
-        double umbral = 0;
-        double errorCuadratico = 0;
-        //Paso 1: Mientras la condicion de parada sea falsa ejecutar los pasos 2-6:
-        while (epocas_aux < this.epocas) {
-        	errorCuadratico=0;
-            Double b_aux = b;
-            Double[] w_aux = w.clone();
-            //Paso 2: Para cada par de entrenamiento (s:t), ejecutar los pasos 3-5:
-            for (int i = 0; i < datostrain.getDatos().length; i++) {
-                sumatorio = 0;
-                double error=0;
-                //Paso 3: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
-                for (int j = 0; j < datostrain.getNumAtributos(); j++) {
-                    xi[j] = Double.parseDouble(datostrain.getDatos()[i][j]);
-                }
-                //Paso 4: Calcular la respuesta de la neurona de salida:
-                //y _ in = b + sumatorio(x, w)
-                for (int j = 0; j < w.length; j++) {
-                    sumatorio += xi[j] * w[j];
-                }
-
-                y_in = b + sumatorio;
-
-                double t;
-
-                String aux_clases = "";
-                /*Obtenemos las distintas clases*/
-                for (int l = 0; l < datostrain.getNumClases(); l++) {
-                    aux_clases = aux_clases.concat(datostrain.getDatos()[i][datostrain.getNumAtributos() + l]);
-                }
-
-                //Paso 5: Ajustar los pesos y el sesgo si ha ocurrido un error para este patrón: 
-                t = datostrain.getClases().get(aux_clases);
-
-                for (int j = 0; j < w.length; j++) {
-                	error = (t-y_in);
-                    w[j] = w[j] + (this.tasa_aprendizaje * (error) * xi[j]);
-                    error = Math.pow(error, 2);
-                }
-                b = b + (this.tasa_aprendizaje * (t-y_in));
-                errorCuadratico += error;
-            }
-            System.out.println(epocas_aux + "\t" + errorCuadratico/datostrain.getNumDatos());
-            epocas_aux++;
-            //if no cambia, break
-            if(this.comparador(w, w_aux) && Objects.equals(b, b_aux))
-                break;
+        int epocas_aux;
+        double[] w_aux = w.clone();
+        double b_aux = b;
+        for(epocas_aux = 0; epocas_aux< this.epocas; epocas_aux++){
+        	for(int contador=0; contador < datostrain.getNumDatos(); contador++){
+        		for(int index = 0; index < datostrain.getNumAtributos(); index++){
+        			xi[index] = Double.parseDouble(datostrain.getDatos()[contador][index]);
+        		}
+        		double sumatorio = 0;
+        		for(int index = 0; index < xi.length; index++){
+        			sumatorio += xi[index] * w[index];
+        		}
+        		double y_in = b + sumatorio;
+        		
+        		double t = Double.parseDouble(datostrain.getDatos()[contador][datostrain.getNumAtributos() + 1]);
+        		
+        		for(int index=0; index < w.length; index++){
+        			w_aux[index] = w_aux[index] + this.tasa_aprendizaje * (t-y_in) * xi[index];
+        		}
+        		
+        		b_aux = b_aux + this.tasa_aprendizaje * (t-y_in);
+        		
+        	}
+    		if(condicionParada(w_aux,b_aux)){
+    			w = w_aux.clone();
+    			break;
+    		}
+    		w = w_aux.clone();
         }
         System.out.println("Numero de epocas realizadas: " + epocas_aux);
 
+    }
+    
+    private boolean condicionParada(double[] w, double b){
+    	for(int index = 0; index<this.w.length;index++){
+    		if(Math.abs((this.w[index] - w[index])) > this.tolerancia){
+    			return false;
+    		}
+    	}
+    	if(Math.abs((this.b - b)) > this.tolerancia){
+			return false;
+		}
+    	return true;
     }
 
     @Override
@@ -124,7 +111,7 @@ public class ClasificadorAdaline extends Clasificador {
             //Paso 3: Calcular la respuesta de la neurona de salida:
             //y _ in = b + sumatorio(x, w)
             for (int j = 0; j < w.length; j++) {
-                sumatorio += xi[j] + w[j];
+                sumatorio += xi[j] * w[j];
             }
 
             y_in = b + sumatorio;
@@ -142,14 +129,6 @@ public class ClasificadorAdaline extends Clasificador {
         }
 
         return datosClasificados;
-    }
-    
-    private boolean comparador(Double[] x, Double[] y){
-        for(int i=0;i<x.length;i++)
-            if(x[i] != y[i]) return false;
-        
-        return true;
-        
     }
 
 }
