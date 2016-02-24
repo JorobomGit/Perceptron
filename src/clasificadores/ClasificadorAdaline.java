@@ -24,7 +24,7 @@ public class ClasificadorAdaline extends Clasificador {
         for (int i = 0; i < tam_w; i++) {
             this.w[i] = 0.0;
         }
-        this.tolerancia = 0.01;
+        this.tolerancia = 0.00005;
 
         //Establecer la tasa de aprendizaje a (0 < a ≤1)
         this.tasa_aprendizaje = 0.01;
@@ -34,47 +34,65 @@ public class ClasificadorAdaline extends Clasificador {
     public void entrenamiento(Datos datostrain) {
         //Paso 1: Mientras que la condición de parada sea falsa, ejecutar pasos 2-6
         //Condicion de parada: o maximo numero de epocas o los pesos no cambian
+        int epocas_aux = 0;
 
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
         try {
             System.out.println("Introduzca epocas para Perceptron:");
             this.epocas = Integer.parseInt((bufferRead.readLine()));
-            System.out.println("Introduce la tasa de aprendizaje:");
-            this.tasa_aprendizaje = Double.parseDouble(bufferRead.readLine());
         } catch (IOException ex) {
             Logger.getLogger(ClasificadorPerceptron.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         //Variable xi equivalente a las activaciones si
         double[] xi = new double[datostrain.getNumAtributos()];
-        int epocas_aux;
-        double[] w_aux = w.clone();
-        double b_aux = b;
-        for(epocas_aux = 0; epocas_aux< this.epocas; epocas_aux++){
-        	for(int contador=0; contador < datostrain.getNumDatos(); contador++){
-        		for(int index = 0; index < datostrain.getNumAtributos(); index++){
-        			xi[index] = Double.parseDouble(datostrain.getDatos()[contador][index]);
-        		}
-        		double sumatorio = 0;
-        		for(int index = 0; index < xi.length; index++){
-        			sumatorio += xi[index] * w[index];
-        		}
-        		double y_in = b + sumatorio;
-        		
-        		double t = Double.parseDouble(datostrain.getDatos()[contador][datostrain.getNumAtributos() + 1]);
-        		
-        		for(int index=0; index < w.length; index++){
-        			w_aux[index] = w_aux[index] + this.tasa_aprendizaje * (t-y_in) * xi[index];
-        		}
-        		
-        		b_aux = b_aux + this.tasa_aprendizaje * (t-y_in);
-        		
-        	}
-    		if(condicionParada(w_aux,b_aux)){
-    			w = w_aux.clone();
-    			break;
-    		}
-    		w = w_aux.clone();
+
+        double y_in, sumatorio;
+     
+        while (epocas_aux < this.epocas) {
+            double b_aux = b;
+            double[] w_aux = w.clone();
+            boolean parada = true;
+            double error=0;
+            //Paso 2: Para cada par de entrenamiento (s:t), ejecutar los pasos 3-5:
+            for (int i = 0; i < datostrain.getDatos().length; i++) {
+                sumatorio = 0;
+                //Paso 3: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
+                for (int j = 0; j < datostrain.getNumAtributos(); j++) {
+                    xi[j] = Double.parseDouble(datostrain.getDatos()[i][j]);
+                }
+                //Paso 4: Calcular la respuesta de la neurona de salida:
+                //y _ in = b + sumatorio(x, w)
+                for (int j = 0; j < w.length; j++) {
+                    sumatorio += xi[j] * w[j];
+                }
+
+                y_in = b + sumatorio;
+
+                double t;
+
+                String aux_clases = "";
+                /*Obtenemos las distintas clases*/
+                for (int l = 0; l < datostrain.getNumClases(); l++) {
+                    aux_clases = aux_clases.concat(datostrain.getDatos()[i][datostrain.getNumAtributos() + l]);
+                }
+
+                //Paso 5: Ajustar los pesos y el sesgo si ha ocurrido un error para este patrón: 
+                t = datostrain.getClases().get(aux_clases);
+                error += Math.pow((t-y_in), 2);
+                for (int j = 0; j < w.length; j++) {               	
+                	w[j] = w[j] + (this.tasa_aprendizaje * (t-y_in) * xi[j]);
+                }
+                b = b + (this.tasa_aprendizaje * (t-y_in));
+                parada = condicionParada(w_aux,b_aux);
+                
+            }
+            error = error / datostrain.getNumDatos();
+            System.out.println(error);
+            epocas_aux++;
+            //if no cambia, break
+            if(parada)
+                break;
         }
         System.out.println("Numero de epocas realizadas: " + epocas_aux);
 
