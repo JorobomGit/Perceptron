@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,20 +15,20 @@ public class ClasificadorPerceptron extends Clasificador {
 
     int epocas;
 
-    Double b;
-    Double[] w; //Vector de pesos w
-    Double tasa_aprendizaje;
+    double b;
+    double[] w; //Vector de pesos w
+    double tasa_aprendizaje;
 
     public ClasificadorPerceptron(int tam_w) {
         //Inicializar todos los pesos y sesgos (por simplicidad a cero)
         this.b = 0.0;
-        this.w = new Double[tam_w];
+        this.w = new double[tam_w];
         for (int i = 0; i < tam_w; i++) {
             this.w[i] = 0.0;
         }
 
         //Establecer la tasa de aprendizaje a (0 < a ≤1)
-        this.tasa_aprendizaje = 0.1;
+        this.tasa_aprendizaje = 1;
     }
 
     @Override
@@ -52,32 +51,32 @@ public class ClasificadorPerceptron extends Clasificador {
         double y_in, sumatorio;
         int y;
 
-        double umbral = 0;      
+        double umbral = 0;
         while (epocas_aux < this.epocas) {
-            Double b_aux = b;
-            Double[] w_aux = w.clone();
+            System.out.println("x1 x2 b      y_in y t        Dw1 Dw2 Db      w1 w2 b");
+            double b_aux = b;
+            double[] w_aux = w.clone();
             //Paso 2: Para cada par de entrenamiento (s:t), ejecutar los pasos 3-5:
             for (int i = 0; i < datostrain.getDatos().length; i++) {
                 sumatorio = 0;
+
                 //Paso 3: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
                 for (int j = 0; j < datostrain.getNumAtributos(); j++) {
-                    xi[j] = Double.parseDouble(datostrain.getDatos()[i][j]);
+                    xi[j]= Double.parseDouble(datostrain.getDatos()[i][j]);
                 }
                 //Paso 4: Calcular la respuesta de la neurona de salida:
                 //y _ in = b + sumatorio(x, w)
                 for (int j = 0; j < w.length; j++) {
-                    sumatorio += xi[j] + w[j];
+                    sumatorio += xi[j] * w[j];
                 }
 
                 y_in = b + sumatorio;
 
                 //Para actualizar los pesos necesitamos la t, hay que configurar la t por clases
-                if (y_in > umbral) {
+                if (y_in >= umbral) {
                     y = 1;
-                } else if (y_in < -umbral) {
-                    y = -1;
                 } else {
-                    y = 0;
+                    y = -1;
                 }
 
                 double t;
@@ -97,11 +96,16 @@ public class ClasificadorPerceptron extends Clasificador {
                     }
                     b = b + (this.tasa_aprendizaje * t);
                 }
+                System.out.println(xi[0] + " " + xi[1] + " 0\t" 
+                        + y_in +" "+ y +" "+ t +"\t"+ 
+                        (this.tasa_aprendizaje * t * xi[0]) + " "+(this.tasa_aprendizaje * t * xi[1]) +" "+ (this.tasa_aprendizaje * t)
+                +"\t"+ w[0]+" " + w[1] + " " + b);
             }
             epocas_aux++;
             //if no cambia, break
-            if(this.comparador(w, w_aux) && Objects.equals(b, b_aux))
+            if (this.comparador(w, w_aux) && b == b_aux) {
                 break;
+            }
         }
         System.out.println("Numero de epocas realizadas: " + epocas_aux);
 
@@ -118,42 +122,45 @@ public class ClasificadorPerceptron extends Clasificador {
 
         double umbral = 0;
         for (int i = 0; i < datos.getNumDatos(); i++) {
-            sumatorio=0;
+            sumatorio = 0;
             //Paso 2: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
             for (int j = 0; j < datos.getNumAtributos(); j++) {
-                xi[j] = Double.parseDouble(datos.getDatos()[i][j]);
+                xi[j]= Double.parseDouble(datos.getDatos()[i][j]);
+                //System.out.println("X: " + xi[j]);
             }
+            
+            
             //Paso 3: Calcular la respuesta de la neurona de salida:
             //y _ in = b + sumatorio(x, w)
             for (int j = 0; j < w.length; j++) {
-                sumatorio += xi[j] + w[j];
+                sumatorio += xi[j] * w[j];
             }
 
             y_in = b + sumatorio;
 
             //Calculamos respuesta de salida
-            if (y_in > umbral) {
+			if(y_in>= umbral)
                 y = 1;
-            } else if (y_in < -umbral) {
-                y = -1;
             } else {
-                y = 0;
+                y = -1;
             }
-            
+
             //Obtenemos todas las predicciones
             datosClasificados.add(Integer.toString(y));
-               
         }
 
         return datosClasificados;
     }
-    
-    private boolean comparador(Double[] x, Double[] y){
-        for(int i=0;i<x.length;i++)
-            if(x[i] != y[i]) return false;
-        
+
+    private boolean comparador(double[] x, double[] y) {
+        for (int i = 0; i < x.length; i++) {
+            if (x[i] != y[i]) {
+                return false;
+            }
+        }
+
         return true;
-        
+
     }
 
 }

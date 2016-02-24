@@ -83,17 +83,6 @@ abstract public class Clasificador {
         media = errores.stream().map((err) -> err).reduce(media, (accumulator, _item) -> accumulator + _item);
         media = media/errores.size();
         System.out.println("Error medio Simple y Perceptron:" + media); // Se imprimen
-        
-        System.out.println("****************************************");
-        System.out.println("CLASIFICADOR ADALINE");
-        System.out.println("****************************************");
-        c = new ClasificadorAdaline(d.getNumAtributos());      
-        media = 0;     
-        errores = Clasificador.validacion(partS, d, c);
-        
-        media = errores.stream().map((err) -> err).reduce(media, (accumulator, _item) -> accumulator + _item);
-        media = media/errores.size();
-        System.out.println("Error medio Simple y Adaline:" + media); // Se imprimen
  
     }
 }
