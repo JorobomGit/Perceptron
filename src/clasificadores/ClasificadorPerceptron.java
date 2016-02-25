@@ -139,9 +139,8 @@ public class ClasificadorPerceptron extends Clasificador {
             y_in = b + sumatorio;
 
             //Calculamos respuesta de salida
-			if(y_in>= umbral)
+			if(y_in>= umbral){
                 y = 1;
-            } else {
                 y = -1;
             }
 

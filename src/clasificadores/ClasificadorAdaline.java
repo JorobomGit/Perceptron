@@ -1,7 +1,9 @@
 package clasificadores;
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,9 +39,16 @@ public class ClasificadorAdaline extends Clasificador {
         int epocas_aux = 0;
 
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+        FileWriter fichero = null;
+        PrintWriter pw = null;
         try {
-            System.out.println("Introduzca epocas para Perceptron:");
+            System.out.println("Introduzca epocas para Adaline:");
             this.epocas = Integer.parseInt((bufferRead.readLine()));
+            System.out.println("Introduzca la tasa de aprendizaje:");
+            this.tasa_aprendizaje = Double.parseDouble(bufferRead.readLine());
+            
+            fichero = new FileWriter("ECW_adaline_"+this.epocas+".txt");
+            pw = new PrintWriter(fichero);
         } catch (IOException ex) {
             Logger.getLogger(ClasificadorPerceptron.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -88,13 +97,19 @@ public class ClasificadorAdaline extends Clasificador {
                 
             }
             error = error / datostrain.getNumDatos();
-            System.out.println(error);
+            pw.write(error+"\n");
             epocas_aux++;
             //if no cambia, break
             if(parada)
                 break;
         }
         System.out.println("Numero de epocas realizadas: " + epocas_aux);
+        pw.close();
+        try {
+			fichero.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
     }
     
@@ -113,6 +128,8 @@ public class ClasificadorAdaline extends Clasificador {
     @Override
     public ArrayList<String> clasifica(Datos datos) {
         ArrayList<String> datosClasificados = new ArrayList<>();
+        FileWriter fichero = null;
+        PrintWriter pw = null;
         //Paso 1: Para cada vector de entrada x a clasificar, ejecutar pasos 2-4
         //Variable xi equivalente a las activaciones si
         double[] xi = new double[datos.getNumAtributos()];
@@ -120,11 +137,19 @@ public class ClasificadorAdaline extends Clasificador {
         int y;
 
         double umbral = 0;
+        
+        try{
+        	fichero = new FileWriter("predicciones_adaline.txt");
+        	pw = new PrintWriter(fichero);
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
         for (int i = 0; i < datos.getNumDatos(); i++) {
             sumatorio=0;
             //Paso 2: Establecer las activaciones a las neuronas de entrada xi = si (i=1…n)
             for (int j = 0; j < datos.getNumAtributos(); j++) {
                 xi[j] = Double.parseDouble(datos.getDatos()[i][j]);
+                pw.write(xi[j] + " ");
             }
             //Paso 3: Calcular la respuesta de la neurona de salida:
             //y _ in = b + sumatorio(x, w)
@@ -140,12 +165,18 @@ public class ClasificadorAdaline extends Clasificador {
             } else{
                 y = -1;
             }
-            
+            pw.write(y+"\n");
+
             //Obtenemos todas las predicciones
             datosClasificados.add(Integer.toString(y));
                
         }
-
+        try{
+        	pw.close();
+        	fichero.close();
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
         return datosClasificados;
     }
 
